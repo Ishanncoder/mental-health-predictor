@@ -1,5 +1,5 @@
 // Configuration
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = 'https://mental-health-predictor-1-j2g5.onrender.com';
 
 // DOM Elements
 const form = document.getElementById('predictionForm');
