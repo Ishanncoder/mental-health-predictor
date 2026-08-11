@@ -1,28 +1,16 @@
-const API_BASE_URL = 'http://127.0.0.1:8000';
+// Configuration
+const API_BASE_URL = 'http://localhost:8000';
 
+// DOM Elements
 const form = document.getElementById('predictionForm');
 const predictBtn = document.getElementById('predictBtn');
 const loading = document.getElementById('loading');
 const resultContainer = document.getElementById('resultContainer');
 const scoreDisplay = document.getElementById('scoreDisplay');
 const scoreInterpretation = document.getElementById('scoreInterpretation');
+const scoreCircleFg = document.getElementById('scoreCircleFg');
 const errorAlert = document.getElementById('errorAlert');
-
-// Field mapping for API
-const fieldMapping = {
-    age: 'age',
-    gender: 'gender',
-    country: 'country',
-    academicLevel: 'academic_level',
-    platform: 'most_used_platform',
-    purpose: 'purpose_of_use',
-    dailyUsage: 'avg_daily_usage_hours',
-    unlocks: 'daily_unlocks',
-    studyHours: 'study_hours',
-    activity: 'physical_activity_hours',
-    sleep: 'sleep_hours_per_night',
-    stress: 'stress_level'
-};
+const tipsList = document.getElementById('tipsList');
 
 // Validation rules
 const validationRules = {
@@ -39,6 +27,7 @@ Object.keys(validationRules).forEach(fieldId => {
     const field = document.getElementById(fieldId);
     if (field) {
         field.addEventListener('blur', () => validateField(fieldId));
+        field.addEventListener('change', () => validateField(fieldId));
     }
 });
 
@@ -79,30 +68,64 @@ function validateForm() {
     return isValid;
 }
 
+// Get wellness tips based on score
+function getWellnessTips(score) {
+    const tips = [];
+
+    if (score < 0.4) {
+        tips.push('📱 Try to reduce your daily social media usage');
+        tips.push('😴 Ensure you get 7-8 hours of sleep daily');
+        tips.push('🏃 Increase your physical activity to 1-2 hours');
+        tips.push('📚 Dedicate more time to meaningful activities');
+    } else if (score < 0.7) {
+        tips.push('⚡ Maintain your current balanced lifestyle');
+        tips.push('🎯 Consider limiting screen time before bed');
+        tips.push('🧘 Practice mindfulness or meditation');
+        tips.push('🌟 Keep up your physical activity routine');
+    } else {
+        tips.push('🎉 Great job maintaining excellent digital wellness!');
+        tips.push('💪 Continue your current healthy habits');
+        tips.push('🌱 Help others improve their digital wellness');
+        tips.push('📈 Keep monitoring your wellness regularly');
+    }
+
+    return tips;
+}
+
+// Get interpretation
 function getScoreInterpretation(score) {
     if (score >= 0.7) {
         return {
-            text: '✨ Good - Your mental health appears to be in good shape!',
+            text: '✨ Excellent! Your digital wellness is outstanding. Keep maintaining these healthy habits!',
             class: 'good'
         };
     } else if (score >= 0.4) {
         return {
-            text: '⚠️ Moderate - Consider taking steps to improve your digital wellness.',
+            text: '⚠️ Moderate. Consider making some adjustments to improve your digital wellness.',
             class: 'moderate'
         };
     } else {
         return {
-            text: '❗ Poor - It would be beneficial to make some lifestyle changes.',
+            text: '❗ Poor. Your digital wellness needs attention. Focus on the tips below!',
             class: 'poor'
         };
     }
 }
 
+// Animate score circle
+function animateScoreCircle(score) {
+    const circumference = 2 * Math.PI * 90; // radius is 90
+    const offset = circumference - (score * circumference);
+    
+    scoreCircleFg.style.strokeDashoffset = offset;
+}
+
+// Form submission
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     if (!validateForm()) {
-        showError('Please fix the validation errors above.');
+        showError('Please fill all fields correctly');
         return;
     }
 
@@ -154,12 +177,24 @@ form.addEventListener('submit', async (e) => {
 
 function displayResult(score) {
     scoreDisplay.textContent = score.toFixed(2);
+    
     const interpretation = getScoreInterpretation(score);
     scoreInterpretation.textContent = interpretation.text;
-    scoreInterpretation.className = `score-interpretation ${interpretation.class}`;
+    scoreInterpretation.className = `interpretation ${interpretation.class}`;
+    
+    // Animate circle
+    animateScoreCircle(score);
+    
+    // Get and display tips
+    const tips = getWellnessTips(score);
+    tipsList.innerHTML = tips.map(tip => `<li>${tip}</li>`).join('');
     
     resultContainer.classList.add('show');
-    resultContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    
+    // Scroll to results
+    setTimeout(() => {
+        resultContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 300);
 }
 
 function showError(message) {
@@ -176,3 +211,42 @@ document.getElementById('resetBtn').addEventListener('click', () => {
     resultContainer.classList.remove('show');
     hideError();
 });
+
+// SVG Gradient definition (add if needed)
+const svgNS = "http://www.w3.org/2000/svg";
+const svg = document.querySelector('.score-circle svg');
+if (svg && !svg.querySelector('defs')) {
+    const defs = document.createElementNS(svgNS, 'defs');
+    const gradient = document.createElementNS(svgNS, 'linearGradient');
+    gradient.setAttribute('id', 'gradient');
+    gradient.setAttribute('x1', '0%');
+    gradient.setAttribute('y1', '0%');
+    gradient.setAttribute('x2', '100%');
+    gradient.setAttribute('y2', '100%');
+    
+    const stop1 = document.createElementNS(svgNS, 'stop');
+    stop1.setAttribute('offset', '0%');
+    stop1.setAttribute('style', 'stop-color:#6366f1;stop-opacity:1');
+    
+    const stop2 = document.createElementNS(svgNS, 'stop');
+    stop2.setAttribute('offset', '100%');
+    stop2.setAttribute('style', 'stop-color:#8b5cf6;stop-opacity:1');
+    
+    gradient.appendChild(stop1);
+    gradient.appendChild(stop2);
+    defs.appendChild(gradient);
+    svg.insertBefore(defs, svg.firstChild);
+}
+
+// Focus effects
+document.querySelectorAll('input, select').forEach(field => {
+    field.addEventListener('focus', function() {
+        this.closest('.form-group').style.transform = 'scale(1.02)';
+    });
+    
+    field.addEventListener('blur', function() {
+        this.closest('.form-group').style.transform = 'scale(1)';
+    });
+});
+
+console.log('Mental Wellness Analyzer initialized! 🧠');
