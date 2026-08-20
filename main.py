@@ -1,3 +1,4 @@
+from database import supabase
 import joblib
 import pandas as pd
 from fastapi import FastAPI
@@ -70,5 +71,22 @@ def predict(data : StudentData):
  
  
     prediction = model.predict(input_rows)[0]   
+    
+    supabase.table("predictions").insert({
+        "age": data.age,
+        "gender": data.gender,
+        "country": data.country,
+        "academic_level": data.academic_level,
+        "most_used_platform": data.most_used_platform,
+        "purpose_of_use": data.purpose_of_use,
+        "avg_daily_usage_hours": data.avg_daily_usage_hours,
+        "daily_unlocks": data.daily_unlocks,
+        "study_hours": data.study_hours,
+        "physical_activity_hours": data.physical_activity_hours,
+        "sleep_hours_per_night": data.sleep_hours_per_night,
+        "stress_level": data.stress_level,
+        "predicted_score": float(prediction)
+    }).execute()
+    
     return PredictionResponse(predicted_mental_health_score = round(float(prediction),2))
     
