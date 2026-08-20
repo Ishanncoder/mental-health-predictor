@@ -4,3 +4,4 @@ joblib
 pandas
 pydantic
 scikit-learn
+supabase
